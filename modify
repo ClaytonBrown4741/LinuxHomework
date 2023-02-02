@@ -1,0 +1,53 @@
+#!/bin/sh
+
+fileType=''
+modifyTime=''
+wordCount=0
+counter=0
+
+for i
+do
+	wordCount=0
+	fileType=$(file $i -b)
+	((counter++))
+	modifyTime=$(date "+%A, %b %d, %Y: %H%M")
+	if [ -d $i ]; then
+		echo modify: $i, is a directory
+	elif [ -x $i ]; then
+		echo modify: $i, cannot edit executables.
+	elif [[ "$fileType" == *"ASCII text"* ]]; then
+		wordCount=$(grep -i 'Gradez' $i | wc -l)
+		if [ $wordCount -gt 0 ]; then
+		ed -s $i << END
+\$a
+Modified on: $modifyTime
+Modified by: Clayton Brown
+.
+w
+1m2
+w
+1,\$s/Gradez/Grades/g
+w
+q
+END
+                else
+                ed -s $i << END
+\$a
+Modified on: $modifyTime
+Modified by: Clayton Brown
+.
+w
+1m2
+w
+q
+END
+
+                fi
+	else
+		echo modify: $i, filetype not supported.
+	fi
+done
+
+if [ $counter -lt 1 ]; then
+	echo 'usage: modify filename [filename ...]'
+fi
